@@ -61,15 +61,7 @@ const mainAttrs = computed( () => ( {
 
 		pointer-events: none;
 
-		border: 2px solid red!important;
-
 	}
-
-}
-
-.map-group > .map-marker {
-
-	border: 2px solid red!important;
 
 }
 

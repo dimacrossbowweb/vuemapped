@@ -1,11 +1,10 @@
 <template>
 
 	<div
-	
-		v-if="value"
+
 		ref="popup"
 		v-bind="wrapperAttrs"
-		
+
 	>
 
 		<slot></slot>
@@ -16,12 +15,11 @@
 
 <script lang="ts" setup>
 import {
-	
+
 	type Ref,
 
 	watch,
 
-	useSlots,
 	ref,
 	useTemplateRef,
 	computed,
@@ -62,8 +60,6 @@ const props = withDefaults( defineProps<Partial<IProps>>(), {
 
 const value = defineModel( { default: false } );
 
-const slots = useSlots();
-
 const emit = defineEmits( [
 
 	'click',
@@ -74,20 +70,7 @@ const map = inject<Ref<Map | null>>( 'mapInstance' );
 
 const popup = useTemplateRef( 'popup' );
 
-const popupHandle = ref<Popup>();
-
-const hasSlotContent = computed( () => {
-
-	if ( slots.default ) {
-
-		const slotContent = slots.default();
-		return slotContent && slotContent.length > 0;
-
-	}
-	
-	return false;
-
-} );
+const popupHandle = ref<Popup | null>( null );
 
 const { block } = useBem( 'MapPopup' );
 
@@ -144,58 +127,50 @@ onMounted( () => {
 
 	watchEffect( () => {
 
-		if (
-			
-			popup?.value instanceof HTMLDivElement &&
-			hasSlotContent.value &&
-			!popupHandle.value
-		
-		) {
+		if ( map?.value instanceof Map && popup.value instanceof HTMLDivElement && !popupHandle.value ) {
 
-			if ( map?.value instanceof Map ) {
+			popupHandle.value = new maplibregl.Popup( options.value )
+								.setLngLat( [ lng.value, lat.value ] )
+								.setDOMContent( popup.value );
 
-				if ( value.value ) {
+			if ( value.value ) {
 
-					popupHandle.value = new maplibregl.Popup( options.value )
-											.setLngLat( [ lng.value, lat.value ] )
-											.setDOMContent( popup.value )
-											.addTo( map.value );
-
-				} else {
-
-					if ( popupHandle.value instanceof Popup ) {
-
-						popupHandle.value.remove();
-
-					}
-
-				}
+				popupHandle.value.addTo( map.value );
 
 			}
 
 		}
 
 	} );
- 
+
+} );
+
+watch( value, ( show ) => {
+
+	if ( !( map?.value instanceof Map ) ) return;
+
+	if ( show ) {
+
+		popupHandle.value?.addTo( map.value );
+
+	} else {
+
+		popupHandle.value?.remove();
+
+	}
+
 } );
 
 watch( [ lat, lng ], () => {
 
-	if ( popupHandle.value && map?.value instanceof Map ) {
-
-		popupHandle.value.setLngLat( [ lng.value, lat.value ] );
-
-	}
+	popupHandle.value?.setLngLat( [ lng.value, lat.value ] );
 
 } );
 
 onBeforeUnmount( () => {
 
-	if ( popupHandle.value instanceof Popup ) {
-
-		popupHandle.value.remove();
-
-	}
+	popupHandle.value?.remove();
+	popupHandle.value = null;
 
 } );
 

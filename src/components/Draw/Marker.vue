@@ -92,7 +92,7 @@ const hasMapInstance = computed( () => {
 
 } );
 
-const { block } = useBem( 'MapMarker' );
+const { block } = useBem( 'DrawMarker' );
 
 const namespace = computed( () => props?.namespace ?? '' );
 const lat = computed( () => +props?.lat );
@@ -206,7 +206,7 @@ function onClick ( e: unknown ) {
 </script>
 
 <style lang="scss" scoped>
-.map-marker {
+.draw-marker {
 
 	width: v-bind( width );
 	height: v-bind( height );

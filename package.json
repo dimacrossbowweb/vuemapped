@@ -1,28 +1,61 @@
 {
-  "name": "map-layers",
-  "private": true,
-  "version": "0.0.0",
+  "name": "vuemapped",
+  "version": "0.1.0",
   "type": "module",
+  "main": "./dist/vuemapped.cjs.js",
+  "module": "./dist/vuemapped.es.js",
+  "types": "./dist/index.d.ts",
+  "keywords": ["maplibre", "mapbox", "vue", "map"],
+  "author": "Dimacrossbow",
+  "license": "MIT",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/vuemapped.es.js",
+      "require": "./dist/vuemapped.cjs.js"
+    },
+    "./dist/vuemapped.css": "./dist/vuemapped.css"
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": [
+    "*.css"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:lib": "vite build --config vite.lib.config.ts",
     "preview": "vite preview"
   },
+  "peerDependencies": {
+    "vue": "^3.5.0",
+    "maplibre-gl": "^5.0.0",
+    "@deck.gl/core": "^9.0.0",
+    "@deck.gl/mapbox": "^9.0.0",
+    "@deck.gl/mesh-layers": "^9.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@deck.gl/core": { "optional": true },
+    "@deck.gl/mapbox": { "optional": true },
+    "@deck.gl/mesh-layers": { "optional": true }
+  },
   "dependencies": {
+    "uuid": "^13.0.0"
+  },
+  "devDependencies": {
     "@deck.gl/core": "^9.2.11",
     "@deck.gl/layers": "^9.2.11",
     "@deck.gl/mapbox": "^9.2.11",
     "@deck.gl/mesh-layers": "^9.2.11",
+    "@vitejs/plugin-vue": "^6.0.2",
     "deck.gl": "^9.2.11",
     "gsap": "^3.14.2",
     "maplibre-gl": "^5.19.0",
-    "three": "^0.183.2",
-    "uuid": "^13.0.0",
-    "vue": "^3.5.25"
-  },
-  "devDependencies": {
-    "@vitejs/plugin-vue": "^6.0.2",
     "sass-embedded": "^1.97.3",
-    "vite": "^7.3.1"
+    "three": "^0.183.2",
+    "vite": "^7.3.1",
+    "vite-plugin-dts": "^4.0.0",
+    "vue": "^3.5.25"
   }
 }

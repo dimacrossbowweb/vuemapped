@@ -2,7 +2,7 @@
 
 <script lang="ts" setup>
 import { v4 as uuidv4 } from 'uuid';
-import { Map, GeoJSONSource, } from 'maplibre-gl';
+import maplibregl, { Map, GeoJSONSource } from 'maplibre-gl';
 import {
 
 	type Ref,
@@ -40,12 +40,26 @@ interface IProps {
 
 const map = inject<Ref<Map | null>>( 'mapInstance' );
 
+const emit = defineEmits<{
+	click:       [ e: maplibregl.MapMouseEvent ];
+	dblclick:    [ e: maplibregl.MapMouseEvent ];
+	mousedown:   [ e: maplibregl.MapMouseEvent ];
+	mouseup:     [ e: maplibregl.MapMouseEvent ];
+	mousemove:   [ e: maplibregl.MapMouseEvent ];
+	mouseenter:  [ e: maplibregl.MapMouseEvent ];
+	mouseleave:  [ e: maplibregl.MapMouseEvent ];
+	mouseover:   [ e: maplibregl.MapMouseEvent ];
+	mouseout:    [ e: maplibregl.MapMouseEvent ];
+	contextmenu: [ e: maplibregl.MapMouseEvent ];
+}>();
+
 const props = withDefaults( defineProps<Partial<IProps>>(), {
 
 	lat: 0,
 	lng: 0,
 
 	color: 'white',
+	strokeWidth: 0,
 	strokeColor: 'white',
 
 } );
@@ -80,12 +94,15 @@ const radius = computed(() => {
 });
 const color = computed( () => parseColor( props?.color )?.toString() ?? '#ffffff' );
 const opacity = computed( () => props?.opacity ? +props.opacity : 1 );
-const strokeWidth = computed( () => props?.strokeWidth ? +props.strokeWidth : 20 );
+const strokeWidth = computed( () => props?.strokeWidth ? +props.strokeWidth : 0 );
 const strokeColor = computed( () => parseColor( props?.strokeColor )?.toString() ?? '#ffffff' );
 const strokeOpacity = computed( () => props?.strokeOpacity ? +props.strokeOpacity : 1 );
 
 const blur = computed( () => props?.blur ? +props.blur : 0 );
-const translate = computed( () => props?.translate ?? [0, 0] );
+const translate = computed<[number, number]>( () => {
+	const t = props?.translate ?? [0, 0];
+	return [ +t[0], +t[1] ];
+} );
 const translateAnchor = computed( () => props?.translateAnchor ?? 'map' );
 
 const pitchScale = computed( () => props?.pitchScale ?? 'map' );
@@ -119,7 +136,7 @@ onMounted( () => {
 					'geometry': {
 
 						'type': 'Point',
-						'coordinates': [lat.value, lng.value]
+						'coordinates': [lng.value, lat.value]
 					
 					},
 
@@ -136,7 +153,7 @@ onMounted( () => {
 				'source': name,
 				'paint': {
 
-					'circle-radius': radius.value,
+					'circle-radius': radius.value as any,
 					'circle-color': color.value,
 					'circle-opacity': opacity.value,
 
@@ -154,10 +171,12 @@ onMounted( () => {
 
 			});
 
+			addEvents();
+
 		}
 
 	} );
- 
+
 } );
 
 onBeforeUnmount( () => {
@@ -166,6 +185,7 @@ onBeforeUnmount( () => {
 
 		if ( map?.value instanceof Map ) {
 
+			removeEvents();
 			map.value.removeLayer( name );
 			map.value.removeSource( name );
 
@@ -178,6 +198,36 @@ onBeforeUnmount( () => {
 	}
 
 } );
+
+const EVENTS = [ 'click', 'dblclick', 'mousedown', 'mouseup', 'mousemove', 'mouseenter', 'mouseleave', 'mouseover', 'mouseout', 'contextmenu' ] as const;
+
+const handlers: Record<string, ( e: maplibregl.MapMouseEvent ) => void> = {};
+
+function addEvents() {
+
+	if ( !( map?.value instanceof Map ) ) return;
+
+	for ( const event of EVENTS ) {
+
+		const handler = ( e: maplibregl.MapMouseEvent ) => ( emit as any )( event, e );
+		handlers[ event ] = handler;
+		( map.value as any ).on( event, name, handler );
+
+	}
+
+}
+
+function removeEvents() {
+
+	if ( !( map?.value instanceof Map ) ) return;
+
+	for ( const event of EVENTS ) {
+
+		if ( handlers[ event ] ) ( map.value as any ).off( event, name, handlers[ event ] );
+
+	}
+
+}
 
 function updatePointCoordinates(lng: number, lat: number) {
 

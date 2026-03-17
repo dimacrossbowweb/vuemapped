@@ -1,120 +1,186 @@
 <template></template>
 
 <script lang="ts" setup>
-import { type Ref, inject, onMounted, watchEffect, onBeforeUnmount, watch, computed } from 'vue';
-import { Map, GeoJSONSource } from 'maplibre-gl';
 import { v4 as uuidv4 } from 'uuid';
+import maplibregl, { Map, GeoJSONSource } from 'maplibre-gl';
+import {
+	type Ref,
+	inject,
+	computed,
+	onMounted,
+	watchEffect,
+	watch,
+	onBeforeUnmount,
+} from 'vue';
 
-interface Props {
-  // Координаты
-  latitude: number;
-  longitude: number;
-  
-  // Иконка
-  iconImage?: string;           // ID иконки из спрайта
-  iconSize?: number;            // Размер иконки
-  iconColor?: string;           // Цвет иконки (для SDF)
-  iconOpacity?: number;         // Прозрачность иконки
-  iconRotate?: number;          // Поворот иконки в градусах
-  iconHaloColor?: string;       // Цвет ореола иконки
-  iconHaloWidth?: number;       // Ширина ореола иконки
-  iconHaloBlur?: number;        // Размытие ореола иконки
-  iconOffset?: [number, number]; // Смещение иконки [x, y]
-  iconAnchor?: 'center' | 'left' | 'right' | 'top' | 'bottom' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
-  
-  // Текст
-  textField?: string;           // Текст для отображения
-  textSize?: number;            // Размер текста
-  textColor?: string;           // Цвет текста
-  textOpacity?: number;         // Прозрачность текста
-  textHaloColor?: string;       // Цвет ореола текста
-  textHaloWidth?: number;       // Ширина ореола текста
-  textHaloBlur?: number;        // Размытие ореола текста
-  textFont?: string[];          // Шрифт текста
-  textOffset?: [number, number]; // Смещение текста [x, y]
-  textAnchor?: 'center' | 'left' | 'right' | 'top' | 'bottom' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
-  textRotate?: number;          // Поворот текста
-  textTransform?: 'none' | 'uppercase' | 'lowercase';
-  
-  // Общие параметры
-  zOffset?: number;             // Подъем над землей (в метрах)
-  priority?: number;            // Приоритет отрисовки (чем выше, тем важнее)
-  allowOverlap?: boolean;       // Разрешить перекрытие
-  ignorePlacement?: boolean;    // Игнорировать размещение других символов
-  optional?: boolean;           // Опциональный символ (может быть пропущен)
+interface IProps {
+
+	latitude: number;
+	longitude: number;
+
+	// Icon
+	iconImage?: string;
+	iconSize?: number;
+	iconColor?: string;
+	iconOpacity?: number;
+	iconRotate?: number;
+	iconHaloColor?: string;
+	iconHaloWidth?: number;
+	iconHaloBlur?: number;
+	iconOffset?: [number, number];
+	iconAnchor?: 'center' | 'left' | 'right' | 'top' | 'bottom' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+	iconPitchAlignment?: 'map' | 'viewport' | 'auto';
+	iconRotationAlignment?: 'map' | 'viewport' | 'auto';
+
+	// Text
+	textField?: string;
+	textSize?: number;
+	textColor?: string;
+	textOpacity?: number;
+	textHaloColor?: string;
+	textHaloWidth?: number;
+	textHaloBlur?: number;
+	textFont?: string[];
+	textOffset?: [number, number];
+	textAnchor?: 'center' | 'left' | 'right' | 'top' | 'bottom' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+	textRotate?: number;
+	textTransform?: 'none' | 'uppercase' | 'lowercase';
+
+	// Common
+	allowOverlap?: boolean;
+	ignorePlacement?: boolean;
+	optional?: boolean;
+
 }
 
-const props = withDefaults(defineProps<Props>(), {
-  // Иконка
-  iconImage: 'marker-15',
-  iconSize: 1,
-  iconColor: undefined,
-  iconOpacity: 1,
-  iconRotate: 0,
-  iconHaloColor: '#ffffff',
-  iconHaloWidth: 0,
-  iconHaloBlur: 0,
-  iconOffset: () => [0, 0],
-  iconAnchor: 'center',
-  
-  // Текст
-  textField: '',
-  textSize: 12,
-  textColor: '#000000',
-  textOpacity: 1,
-  textHaloColor: '#ffffff',
-  textHaloWidth: 1,
-  textHaloBlur: 0,
-  textFont: () => ['Open Sans Regular'],
-  textOffset: () => [0, 1.5],
-  textAnchor: 'top',
-  textRotate: 0,
-  textTransform: 'none',
-  
-  // Общие
-  zOffset: 0,
-  priority: 1,
-  allowOverlap: false,
-  ignorePlacement: false,
-  optional: false
-});
+const emit = defineEmits<{
+	click:       [ e: maplibregl.MapMouseEvent ];
+	dblclick:    [ e: maplibregl.MapMouseEvent ];
+	mousedown:   [ e: maplibregl.MapMouseEvent ];
+	mouseup:     [ e: maplibregl.MapMouseEvent ];
+	mousemove:   [ e: maplibregl.MapMouseEvent ];
+	mouseenter:  [ e: maplibregl.MapMouseEvent ];
+	mouseleave:  [ e: maplibregl.MapMouseEvent ];
+	mouseover:   [ e: maplibregl.MapMouseEvent ];
+	mouseout:    [ e: maplibregl.MapMouseEvent ];
+	contextmenu: [ e: maplibregl.MapMouseEvent ];
+}>();
 
-const map = inject<Ref<Map | null>>('mapInstance');
-const layerId = `symbol-${uuidv4()}`;
-const sourceId = `source-${uuidv4()}`;
+const props = withDefaults( defineProps<IProps>(), {
 
-async function update () {
+	iconSize: 1,
+	iconOpacity: 1,
+	iconRotate: 0,
+	iconHaloColor: '#ffffff',
+	iconHaloWidth: 0,
+	iconHaloBlur: 0,
+	iconOffset: () => [0, 0],
+	iconAnchor: 'center',
+	iconPitchAlignment: 'auto',
+	iconRotationAlignment: 'auto',
 
-	/*if (
-		
-		sprite?.value instanceof HTMLDivElement &&
-		hasSlotContent.value
-	
-	) {
+	textField: '',
+	textSize: 12,
+	textColor: '#000000',
+	textOpacity: 1,
+	textHaloColor: '#ffffff',
+	textHaloWidth: 1,
+	textHaloBlur: 0,
+	textFont: () => ['Open Sans Regular'],
+	textOffset: () => [0, 1.5],
+	textAnchor: 'top',
+	textRotate: 0,
+	textTransform: 'none',
 
-		if ( map?.value instanceof Map ) {
+	allowOverlap: false,
+	ignorePlacement: false,
+	optional: false,
 
-			map.value.hasImage( name.value ) && map.value.removeImage( name.value );
+} );
 
-		}
+const map = inject<Ref<Map | null>>( 'mapInstance' );
 
-	} else */
+const name = uuidv4();
+const imageName = uuidv4();
 
-	console.log( 'UPDATE' );
-	 
-	if ( !!props.iconImage ) {
+const lat = computed( () => +props.latitude );
+const lng = computed( () => +props.longitude );
 
-		if ( map?.value instanceof Map ) {
+function setIconLayout ( property: string, value: any ) {
 
-			console.log( 'props.iconImage = ', props.iconImage );
+	if ( map?.value instanceof Map && map.value.getLayer( name ) ) {
 
-			map.value.hasImage( 'custom-image' ) && map.value.removeImage( 'custom-image' );
+		map.value.setLayoutProperty( name, `icon-${ property }`, value );
 
-			const image = await map.value.loadImage( props.iconImage );
+	}
 
-			console.log( 'image222 = ', image );
-  
-			map.value.addImage( 'custom-image', image.data );
+}
+
+function setTextLayout ( property: string, value: any ) {
+
+	if ( map?.value instanceof Map && map.value.getLayer( name ) ) {
+
+		map.value.setLayoutProperty( name, `text-${ property }`, value );
+
+	}
+
+}
+
+function setIconPaint ( property: string, value: any ) {
+
+	if ( map?.value instanceof Map && map.value.getLayer( name ) ) {
+
+		map.value.setPaintProperty( name, `icon-${ property }`, value );
+
+	}
+
+}
+
+function setTextPaint ( property: string, value: any ) {
+
+	if ( map?.value instanceof Map && map.value.getLayer( name ) ) {
+
+		map.value.setPaintProperty( name, `text-${ property }`, value );
+
+	}
+
+}
+
+async function loadAndRegisterImage ( url: string ) {
+
+	if ( !( map?.value instanceof Map ) || !url ) return;
+
+	if ( map.value.hasImage( imageName ) ) {
+
+		map.value.removeImage( imageName );
+
+	}
+
+	const image = await map.value.loadImage( url );
+
+	map.value.addImage( imageName, image.data );
+
+}
+
+function updateCoordinates ( lngVal: number, latVal: number ) {
+
+	if ( map?.value instanceof Map ) {
+
+		const source = map.value.getSource( name );
+
+		if ( source ) {
+
+			( source as GeoJSONSource ).updateData( {
+
+				update: [ {
+					id: 0,
+					newGeometry: {
+						type: 'Point',
+						coordinates: [ lngVal, latVal ],
+					},
+				} ],
+
+			} );
 
 		}
 
@@ -122,184 +188,205 @@ async function update () {
 
 }
 
-// Функция создания или обновления слоя
-const updateSymbolLayer = async () => {
-  if (!map?.value) return;
+onMounted( () => {
 
-  const mapInstance = map.value;
+	watchEffect( async () => {
 
-  // 1. GeoJSON источник с точкой
-  const geojsonData = {
-    type: 'FeatureCollection' as const,
-    features: [
-      {
-        type: 'Feature' as const,
-        geometry: {
-          type: 'Point' as const,
-          coordinates: [props.longitude, props.latitude]
-        },
-        properties: {
-          // Можно добавить любые свойства для выражений
-          priority: props.priority,
-          description: props.textField,
-          iconId: props.iconImage
-        }
-      }
-    ]
-  };
+		if ( map?.value instanceof Map && !map.value.getSource( name ) ) {
 
-  // Обновляем или создаем источник
-  if (!mapInstance.getSource(sourceId)) {
-    mapInstance.addSource(sourceId, {
-      type: 'geojson',
-      data: geojsonData
-    });
-  } else {
-    (mapInstance.getSource(sourceId) as GeoJSONSource).setData(geojsonData);
-  }
+			if ( props.iconImage ) {
 
-  // 2. Параметры layout
-  const layout: any = {
-    // Иконка
-    // 'icon-image': props.iconImage,
-    'icon-image': 'custom-image',
-    'icon-size': props.iconSize,
-    'icon-rotate': props.iconRotate,
-    'icon-anchor': props.iconAnchor,
-    'icon-offset': props.iconOffset,
-    'icon-allow-overlap': props.allowOverlap,
-    'icon-ignore-placement': props.ignorePlacement,
-    'icon-optional': props.optional,
+				await loadAndRegisterImage( props.iconImage );
 
-	'icon-pitch-alignment': 'map',
-	'icon-rotation-alignment': 'map',
-    
-    // Текст (если есть)
-    'text-field': props.textField || '',
-    'text-size': props.textSize,
-    'text-font': props.textFont,
-    'text-anchor': props.textAnchor,
-    'text-offset': props.textOffset,
-    'text-rotate': props.textRotate,
-    'text-transform': props.textTransform,
-    'text-allow-overlap': props.allowOverlap,
-    'text-ignore-placement': props.ignorePlacement,
-    'text-optional': props.optional
-  };
-
-  // 3. Параметры paint
-  const paint: any = {
-    // Иконка
-    'icon-opacity': props.iconOpacity,
-    'icon-halo-color': props.iconHaloColor,
-    'icon-halo-width': props.iconHaloWidth,
-    'icon-halo-blur': props.iconHaloBlur,
-    
-    // Текст
-    'text-color': props.textColor,
-    'text-opacity': props.textOpacity,
-    'text-halo-color': props.textHaloColor,
-    'text-halo-width': props.textHaloWidth,
-    'text-halo-blur': props.textHaloBlur
-  };
-
-  // Цвет иконки (только для SDF иконок)
-  if (props.iconColor) {
-    paint['icon-color'] = props.iconColor;
-  }
-
-  // 3D подъем
-  if (props.zOffset) {
-    layout['symbol-z-elevate'] = true;
-    paint['icon-translate'] = [0, 0, props.zOffset];
-    paint['text-translate'] = [0, 0, props.zOffset];
-  }
-
-  // Удаляем старый слой если есть и создаем новый
-  if (mapInstance.getLayer(layerId)) {
-    mapInstance.removeLayer(layerId);
-  }
-
-  mapInstance.addLayer({
-    id: layerId,
-    type: 'symbol',
-    source: sourceId,
-    layout: layout,
-    paint: paint
-  });
-};
-
-// Жизненный цикл
-onMounted(() => {
-
-	watchEffect( () => {
-
-		if (map?.value instanceof Map ) {
-
-			update();
-
-		}
-
-		if (map?.value instanceof Map && !map.value.getSource(sourceId) && map.value.getImage( 'custom-image' )) {
-		
-			if (map.value.loaded()) {
-			
-				updateSymbolLayer();
-
-			} else {
-		
-				map.value.once('load', updateSymbolLayer);
-		
 			}
-	
+
+			if ( map.value.getSource( name ) ) return;
+
+			map.value.addSource( name, {
+
+				type: 'geojson',
+				data: {
+
+					id: 0,
+					type: 'Feature',
+					geometry: {
+						type: 'Point',
+						coordinates: [ lng.value, lat.value ],
+					},
+					properties: {},
+
+				},
+
+			} );
+
+			map.value.addLayer( {
+
+				id: name,
+				type: 'symbol',
+				source: name,
+
+				layout: {
+
+					'icon-image': imageName,
+					'icon-size': props.iconSize,
+					'icon-rotate': props.iconRotate,
+					'icon-anchor': props.iconAnchor,
+					'icon-offset': props.iconOffset,
+					'icon-allow-overlap': props.allowOverlap,
+					'icon-ignore-placement': props.ignorePlacement,
+					'icon-optional': props.optional,
+					'icon-pitch-alignment': props.iconPitchAlignment,
+					'icon-rotation-alignment': props.iconRotationAlignment,
+
+					'text-field': props.textField,
+					'text-size': props.textSize,
+					'text-font': props.textFont,
+					'text-anchor': props.textAnchor,
+					'text-offset': props.textOffset,
+					'text-rotate': props.textRotate,
+					'text-transform': props.textTransform,
+					'text-allow-overlap': props.allowOverlap,
+					'text-ignore-placement': props.ignorePlacement,
+					'text-optional': props.optional,
+
+				},
+
+				paint: {
+
+					'icon-opacity': props.iconOpacity,
+					'icon-halo-color': props.iconHaloColor,
+					'icon-halo-width': props.iconHaloWidth,
+					'icon-halo-blur': props.iconHaloBlur,
+
+					'text-color': props.textColor,
+					'text-opacity': props.textOpacity,
+					'text-halo-color': props.textHaloColor,
+					'text-halo-width': props.textHaloWidth,
+					'text-halo-blur': props.textHaloBlur,
+
+				},
+
+			} );
+
+			addEvents();
+
 		}
 
 	} );
 
-});
+} );
 
-onBeforeUnmount(() => {
-  if (map?.value) {
-    if (map.value.getLayer(layerId)) {
-      map.value.removeLayer(layerId);
-    }
-    if (map.value.getSource(sourceId)) {
-      map.value.removeSource(sourceId);
-    }
-  }
-});
+onBeforeUnmount( () => {
 
-// Следим за изменениями всех пропсов
-watch([
-  () => props.latitude,
-  () => props.longitude,
-  () => props.iconImage,
-  () => props.iconSize,
-  () => props.iconColor,
-  () => props.iconOpacity,
-  () => props.iconRotate,
-  () => props.iconHaloColor,
-  () => props.iconHaloWidth,
-  () => props.iconHaloBlur,
-  () => props.iconOffset,
-  () => props.iconAnchor,
-  () => props.textField,
-  () => props.textSize,
-  () => props.textColor,
-  () => props.textOpacity,
-  () => props.textHaloColor,
-  () => props.textHaloWidth,
-  () => props.textHaloBlur,
-  () => props.textFont,
-  () => props.textOffset,
-  () => props.textAnchor,
-  () => props.textRotate,
-  () => props.textTransform,
-  () => props.zOffset,
-  () => props.allowOverlap,
-  () => props.ignorePlacement,
-  () => props.optional
-], () => {
-  updateSymbolLayer();
-}, { deep: true });
+	try {
+
+		if ( map?.value instanceof Map ) {
+
+			removeEvents();
+			if ( map.value.getLayer( name ) ) map.value.removeLayer( name );
+			if ( map.value.getSource( name ) ) map.value.removeSource( name );
+			if ( map.value.hasImage( imageName ) ) map.value.removeImage( imageName );
+
+		}
+
+	} catch ( e ) {
+
+		console.error( e );
+
+	}
+
+} );
+
+// Coordinates
+watch( [ lat, lng ], ( [ newLat, newLng ] ) => updateCoordinates( newLng, newLat ), { immediate: true } );
+
+// iconImage: reload image (source/layer stay intact)
+watch( () => props.iconImage, async ( url ) => {
+
+	if ( url ) await loadAndRegisterImage( url );
+
+} );
+
+// Icon layout
+watch( () => props.iconSize,              ( val ) => setIconLayout( 'size', val ) );
+watch( () => props.iconRotate,            ( val ) => setIconLayout( 'rotate', val ) );
+watch( () => props.iconAnchor,            ( val ) => setIconLayout( 'anchor', val ) );
+watch( () => props.iconOffset,            ( val ) => setIconLayout( 'offset', val ) );
+watch( () => props.iconPitchAlignment,    ( val ) => setIconLayout( 'pitch-alignment', val ) );
+watch( () => props.iconRotationAlignment, ( val ) => setIconLayout( 'rotation-alignment', val ) );
+
+// Text layout
+watch( () => props.textField,     ( val ) => setTextLayout( 'field', val ) );
+watch( () => props.textSize,      ( val ) => setTextLayout( 'size', val ) );
+watch( () => props.textFont,      ( val ) => setTextLayout( 'font', val ) );
+watch( () => props.textAnchor,    ( val ) => setTextLayout( 'anchor', val ) );
+watch( () => props.textOffset,    ( val ) => setTextLayout( 'offset', val ) );
+watch( () => props.textRotate,    ( val ) => setTextLayout( 'rotate', val ) );
+watch( () => props.textTransform, ( val ) => setTextLayout( 'transform', val ) );
+
+// Shared layout (allow-overlap, ignore-placement, optional affect both icon and text)
+watch( () => props.allowOverlap, ( val ) => {
+
+	setIconLayout( 'allow-overlap', val );
+	setTextLayout( 'allow-overlap', val );
+
+} );
+
+watch( () => props.ignorePlacement, ( val ) => {
+
+	setIconLayout( 'ignore-placement', val );
+	setTextLayout( 'ignore-placement', val );
+
+} );
+
+watch( () => props.optional, ( val ) => {
+
+	setIconLayout( 'optional', val );
+	setTextLayout( 'optional', val );
+
+} );
+
+// Icon paint
+watch( () => props.iconOpacity,    ( val ) => setIconPaint( 'opacity', val ) );
+watch( () => props.iconColor,      ( val ) => setIconPaint( 'color', val ) );
+watch( () => props.iconHaloColor,  ( val ) => setIconPaint( 'halo-color', val ) );
+watch( () => props.iconHaloWidth,  ( val ) => setIconPaint( 'halo-width', val ) );
+watch( () => props.iconHaloBlur,   ( val ) => setIconPaint( 'halo-blur', val ) );
+
+// Text paint
+watch( () => props.textColor,      ( val ) => setTextPaint( 'color', val ) );
+watch( () => props.textOpacity,    ( val ) => setTextPaint( 'opacity', val ) );
+watch( () => props.textHaloColor,  ( val ) => setTextPaint( 'halo-color', val ) );
+watch( () => props.textHaloWidth,  ( val ) => setTextPaint( 'halo-width', val ) );
+watch( () => props.textHaloBlur,   ( val ) => setTextPaint( 'halo-blur', val ) );
+
+const EVENTS = [ 'click', 'dblclick', 'mousedown', 'mouseup', 'mousemove', 'mouseenter', 'mouseleave', 'mouseover', 'mouseout', 'contextmenu' ] as const;
+
+const handlers: Record<string, ( e: maplibregl.MapMouseEvent ) => void> = {};
+
+function addEvents() {
+
+	if ( !( map?.value instanceof Map ) ) return;
+
+	for ( const event of EVENTS ) {
+
+		const handler = ( e: maplibregl.MapMouseEvent ) => ( emit as any )( event, e );
+		handlers[ event ] = handler;
+		( map.value as any ).on( event, name, handler );
+
+	}
+
+}
+
+function removeEvents() {
+
+	if ( !( map?.value instanceof Map ) ) return;
+
+	for ( const event of EVENTS ) {
+
+		if ( handlers[ event ] ) ( map.value as any ).off( event, name, handlers[ event ] );
+
+	}
+
+}
 </script>

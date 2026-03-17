@@ -1,11 +1,11 @@
-# vuemap
+# vuemapped
 
 Vue 3 component library for [MapLibre GL JS](https://maplibre.org/). Declarative, reactive map layers with full TypeScript support.
 
 ## Installation
 
 ```bash
-npm install vuemap maplibre-gl vue
+npm install vuemapped maplibre-gl vue
 ```
 
 For 3D objects (optional):
@@ -19,8 +19,8 @@ npm install @deck.gl/core @deck.gl/mapbox @deck.gl/mesh-layers
 
 ```ts
 import { createApp } from 'vue';
-import { MapLayersPlugin } from 'vuemap';
-import 'vuemap/dist/vuemap.css';
+import { MapLayersPlugin } from 'vuemapped';
+import 'vuemapped/dist/vuemapped.css';
 
 createApp(App).use(MapLayersPlugin).mount('#app');
 ```
@@ -28,8 +28,8 @@ createApp(App).use(MapLayersPlugin).mount('#app');
 ### Individual imports
 
 ```ts
-import { Map, DrawCircle, LayerLine } from 'vuemap';
-import 'vuemap/dist/vuemap.css';
+import { Map, DrawCircle, LayerLine } from 'vuemapped';
+import 'vuemapped/dist/vuemapped.css';
 ```
 
 ---
@@ -550,7 +550,7 @@ Same props and events as `<DrawObject3D>`.
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { Map, MapCamera, MapPopup, DrawCircle, DrawLine, DrawPolygon, DrawSprite, MapSource, LayerCircle } from 'vuemap';
+import { Map, MapCamera, MapPopup, DrawCircle, DrawLine, DrawPolygon, DrawSprite, MapSource, LayerCircle } from 'vuemapped';
 
 const showPopup = ref(false);
 

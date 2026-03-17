@@ -24,7 +24,7 @@ export default defineConfig( {
 			entry: resolve( __dirname, 'src/index.ts' ),
 			name: 'VueMap',
 			formats: [ 'es', 'cjs' ],
-			fileName: ( format ) => `vuemap.${ format }.js`,
+			fileName: ( format ) => `vuemapped.${ format }.js`,
 
 		},
 
@@ -51,7 +51,7 @@ export default defineConfig( {
 				},
 
 				assetFileNames: ( assetInfo ) => {
-					if ( assetInfo.name === 'style.css' ) return 'vuemap.css';
+					if ( assetInfo.name === 'style.css' ) return 'vuemapped.css';
 					return assetInfo.name ?? 'asset';
 				},
 

@@ -21,6 +21,7 @@ import {
 	watch,
 
 	ref,
+	shallowRef,
 	useTemplateRef,
 	computed,
 	inject,
@@ -70,7 +71,7 @@ const map = inject<Ref<Map | null>>( 'mapInstance' );
 
 const popup = useTemplateRef( 'popup' );
 
-const popupHandle = ref<Popup | null>( null );
+const popupHandle = shallowRef<Popup | null>( null );
 
 const { block } = useBem( 'MapPopup' );
 

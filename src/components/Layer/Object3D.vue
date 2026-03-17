@@ -28,7 +28,7 @@ import {
 
 } from 'vue';
 
-interface IProps {
+export interface IProps {
 
 	name: string;
 

@@ -77,7 +77,7 @@ const hasSlotContent = computed( () => {
 
 	if ( slots.default ) {
 
-		const slotContent = slots.default();
+		const slotContent = slots.default?.({});
 		return slotContent && slotContent.length > 0;
 
 	}

@@ -1,13 +1,29 @@
 {
   "name": "vuemapped",
-  "version": "0.1.0",
+  "version": "0.1.5",
   "type": "module",
   "main": "./dist/vuemapped.cjs.js",
   "module": "./dist/vuemapped.es.js",
   "types": "./dist/index.d.ts",
-  "keywords": ["maplibre", "mapbox", "vue", "map"],
+  "keywords": [
+    "maplibre",
+    "mapbox",
+    "vue",
+    "map",
+    "gis",
+    "yandex",
+    "google",
+    "vite",
+    "js",
+    "ts",
+    "frontend"
+  ],
   "author": "Dimacrossbow",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dimacrossbowweb/vuemapped.git"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -29,16 +45,22 @@
     "preview": "vite preview"
   },
   "peerDependencies": {
-    "vue": "^3.5.0",
-    "maplibre-gl": "^5.0.0",
     "@deck.gl/core": "^9.0.0",
     "@deck.gl/mapbox": "^9.0.0",
-    "@deck.gl/mesh-layers": "^9.0.0"
+    "@deck.gl/mesh-layers": "^9.0.0",
+    "maplibre-gl": "^5.0.0",
+    "vue": "^3.5.0"
   },
   "peerDependenciesMeta": {
-    "@deck.gl/core": { "optional": true },
-    "@deck.gl/mapbox": { "optional": true },
-    "@deck.gl/mesh-layers": { "optional": true }
+    "@deck.gl/core": {
+      "optional": true
+    },
+    "@deck.gl/mapbox": {
+      "optional": true
+    },
+    "@deck.gl/mesh-layers": {
+      "optional": true
+    }
   },
   "dependencies": {
     "uuid": "^13.0.0"

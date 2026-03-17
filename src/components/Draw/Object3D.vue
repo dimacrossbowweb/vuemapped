@@ -22,7 +22,7 @@ import {
 
 } from 'vue';
 
-interface IProps {
+export interface IProps {
 
 	lat: string | number;
 	lng: string | number;

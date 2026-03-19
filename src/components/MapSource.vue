@@ -9,8 +9,9 @@ import {
 	onMounted,
 	watchEffect,
 	onBeforeUnmount,
+	watch,
 } from 'vue';
-import { Map, SourceSpecification } from 'maplibre-gl';
+import { Map, Source, SourceSpecification } from 'maplibre-gl';
 import { type IMapSource, MapSource } from '../global/lib/map-source';
 
 interface IProps {
@@ -67,5 +68,35 @@ onBeforeUnmount( () => {
 	}
 
 } );
+
+function updateSourceData ( options: Partial<SourceSpecification> ) {
+
+	if ( map?.value instanceof Map && options?.data ) {
+
+		const source = map.value.getSource( name.value ) as Source;
+
+		if ( source ) {
+
+			source.setData( options.data );
+
+		}
+
+	}
+
+}
+
+watch(
+	
+	() => options.value,
+	( value: Partial<SourceSpecification> ) => {
+
+      updateSourceData( value );
+
+	},
+	{ 
+		deep: true,
+		immediate: false
+	}
+);
 
 </script>
